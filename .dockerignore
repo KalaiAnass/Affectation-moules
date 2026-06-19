@@ -1,0 +1,12 @@
+**/node_modules
+**/dist
+**/.next
+**/out
+**/coverage
+**/*.log
+.git
+.github
+**/.env
+**/.env.*
+!**/.env.example
+packages/engine/data/source/*.xlsm

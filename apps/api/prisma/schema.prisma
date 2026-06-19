@@ -1,0 +1,128 @@
+// Prisma schema for the mold-to-press compatibility platform.
+// PostgreSQL, with foreign keys, constraints and an append-only audit table.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+/// Injection press (machine) and its mounting envelope.
+/// Field names mirror @mpc/engine `Press` for a 1:1 mapping.
+model Press {
+  id                       String   @id
+  brand                    String
+  commissioningYear        Int?
+  magType                  String
+  magTypeRaw               String
+  reversibleWasherDiameter Float?
+  hasLocatingStuds         Boolean
+  maxOpeningStroke         Float?
+  minThickness             Float
+  maxThickness             Float
+  tieBarWidth              Float
+  tieBarHeight             Float
+  platenWidth              Float
+  platenHeight             Float
+  hydraulicPF              Int
+  hydraulicPM              Int
+  sequentialMax            Int?
+  sequentialOutputs        Int
+  heatingZones             Int
+  connectorType            String
+  thermoPF                 Int
+  thermoPM                 Int
+  thermoGrid               Int
+  clampingForce            Float
+  createdAt                DateTime @default(now())
+  updatedAt                DateTime @updatedAt
+
+  audits AuditLog[]
+
+  @@index([brand])
+  @@map("presses")
+}
+
+/// Injection mold (tool) and its mounting requirements.
+/// Field names mirror @mpc/engine `Mold`.
+model Mold {
+  id                      String   @id
+  projectRef              String   @default("")
+  designation             String
+  heightHm                Float
+  widthLm                 Float
+  thicknessEm             Float
+  isStandard              Boolean  @default(false)
+  isReversible            Boolean  @default(false)
+  cavities                String   @default("1")
+  magType                 String
+  magTypeRaw              String
+  centeringWasherDiameter Float?
+  hydraulicPF             Int
+  hydraulicPM             Int
+  heatingZones            Int
+  connectorType           String
+  waterCircuits           Int?
+  nozzles                 Int
+  sequentialNozzles       Int
+  thermoPF                Int
+  thermoPM                Int
+  thermoGrid              Int
+  requiredClampingForce   Float
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
+
+  audits AuditLog[]
+
+  @@map("molds")
+}
+
+enum Role {
+  ADMINISTRATOR
+  ENGINEER
+  TECHNICIAN
+  READ_ONLY
+}
+
+/// Application user. In production, provisioned from the OIDC provider
+/// (Azure AD / Entra ID) via the `externalId` (subject) claim.
+model User {
+  id         String   @id @default(uuid())
+  email      String   @unique
+  name       String?
+  role       Role     @default(READ_ONLY)
+  externalId String?  @unique
+  active     Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  audits AuditLog[]
+
+  @@map("users")
+}
+
+/// Append-only audit trail for traceability (who checked what, when, result).
+model AuditLog {
+  id                 String   @id @default(uuid())
+  createdAt          DateTime @default(now())
+  action             String
+  userId             String?
+  userEmail          String?
+  pressId            String?
+  moldId             String?
+  decision           String?
+  requiresAdaptation Boolean?
+  detail             Json?
+  ip                 String?
+
+  user  User?  @relation(fields: [userId], references: [id], onDelete: SetNull)
+  press Press? @relation(fields: [pressId], references: [id], onDelete: SetNull)
+  mold  Mold?  @relation(fields: [moldId], references: [id], onDelete: SetNull)
+
+  @@index([createdAt])
+  @@index([pressId, moldId])
+  @@map("audit_logs")
+}

@@ -1,0 +1,25 @@
+{
+  "name": "mold-press-compatibility",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Industrial platform to determine whether a plastic injection mold can be mounted on a given press (Forvia Hénin-Beaumont).",
+  "license": "UNLICENSED",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "build:engine": "npm run build --workspace @mpc/engine",
+    "extract": "npm run extract --workspace @mpc/engine",
+    "test:engine": "npm run test --workspace @mpc/engine",
+    "dev:api": "npm run start:dev --workspace @mpc/api",
+    "dev:web": "npm run dev --workspace @mpc/web",
+    "test": "npm run test --workspaces --if-present"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "overrides": {
+    "rxjs": "7.8.2"
+  }
+}

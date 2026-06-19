@@ -1,0 +1,38 @@
+# dependencies
+node_modules/
+.pnp.*
+
+# build output
+dist/
+build/
+.next/
+out/
+*.tsbuildinfo
+
+# env / secrets
+.env
+.env.*
+!.env.example
+
+# logs
+*.log
+npm-debug.log*
+
+# test / coverage
+coverage/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
+
+# docker
+.docker-data/
+
+# keep vendored source workbook, ignore temp excel locks
+~$*.xls*
+
+# Claude Code local settings
+.claude/settings.local.json
