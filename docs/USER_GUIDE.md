@@ -2,10 +2,9 @@
 
 A quick guide for technicians and process engineers.
 
-## Signing in
+## Opening the tool
 
-Open the application and click **Sign in**. In production you are redirected to the company
-SSO (Azure AD). In a local/demo environment, pick a role on the sign-in screen.
+There is **no sign-in** — open the application and you are ready to go.
 
 ## Checking a mold against a press
 

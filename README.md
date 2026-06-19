@@ -48,8 +48,9 @@ docker compose run --rm seed    # one-off: migrate + seed the dataset & demo use
 # API:  http://localhost:3001/api/v1   (Swagger at /api/docs)
 ```
 
-Sign in with a demo role (`engineer@forvia.local`, etc.) on the login screen. In
-production this is replaced by Azure AD / Entra ID SSO — see [docs/SECURITY.md](docs/SECURITY.md).
+The tool is **open — no sign-in required**. Just pick a press and a mold and check.
+(An OIDC/Entra ID + RBAC layer ships in `apps/api/src/auth` but is **not enforced**; see
+[docs/SECURITY.md](docs/SECURITY.md) to turn it on.)
 
 ## Quick start (local dev)
 

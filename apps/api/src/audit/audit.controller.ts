@@ -1,12 +1,8 @@
 import { Controller, DefaultValuePipe, Get, ParseIntPipe, Query } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
-import { Roles } from '../auth/roles.decorator';
-import { AppRole } from '../auth/roles.enum';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { AuditService } from './audit.service';
 
 @ApiTags('audit')
-@ApiBearerAuth()
-@Roles(AppRole.ADMINISTRATOR, AppRole.ENGINEER)
 @Controller('audit')
 export class AuditController {
   constructor(private readonly audit: AuditService) {}

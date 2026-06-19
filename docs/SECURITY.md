@@ -6,6 +6,15 @@ for a production deployment.
 
 ## Authentication
 
+> **Current state:** the tool ships **open** (no enforced authentication) for frictionless
+> use on the shop floor. The full JWT/OIDC + RBAC implementation below lives in
+> `apps/api/src/auth`. To enforce it, re-register the guards in `apps/api/src/app.module.ts`:
+> ```ts
+> { provide: APP_GUARD, useClass: JwtAuthGuard },
+> { provide: APP_GUARD, useClass: RolesGuard },
+> ```
+> and re-import `AuthModule`. The web app's `AuthGate`/login can be restored from git history.
+
 - **Production: OIDC (Azure AD / Entra ID).** Set `OIDC_ISSUER`, `OIDC_AUDIENCE` and
   optionally `OIDC_JWKS_URI`. Tokens are validated as **RS256** against the provider's JWKS
   (`jwks-rsa`, cached & rate-limited). MFA is enforced at the identity provider.

@@ -3,21 +3,9 @@
 Base URL: `http://localhost:3001/api/v1` · Interactive docs: `/api/docs` ·
 OpenAPI JSON: `/api/docs-json`
 
-All endpoints require `Authorization: Bearer <token>` except where marked **public**.
-
-## Auth
-
-### `POST /auth/token` — dev login (public)
-Disabled in production / when OIDC is configured.
-```json
-// request
-{ "email": "engineer@forvia.local" }
-// response
-{ "accessToken": "eyJ…", "user": { "email": "engineer@forvia.local", "role": "ENGINEER" } }
-```
-
-### `GET /auth/me`
-Returns the authenticated principal `{ userId, email, name?, roles[] }`.
+**The API is currently open** — no authentication is required. (A JWT/OIDC + RBAC layer
+exists in `src/auth` but is not enforced; see [SECURITY.md](SECURITY.md) to enable it, after
+which all endpoints below require `Authorization: Bearer <token>`.)
 
 ## Reference data
 

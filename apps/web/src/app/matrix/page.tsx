@@ -2,7 +2,6 @@
 
 import { motion } from 'framer-motion';
 import { useEffect, useState } from 'react';
-import { AuthGate } from '@/components/AuthGate';
 import { Select, type Option } from '@/components/Select';
 import { DecisionChip } from '@/components/status';
 import { api, ApiError } from '@/lib/api';
@@ -80,9 +79,5 @@ function MatrixInner() {
 }
 
 export default function MatrixPage() {
-  return (
-    <AuthGate>
-      <MatrixInner />
-    </AuthGate>
-  );
+  return <MatrixInner />;
 }

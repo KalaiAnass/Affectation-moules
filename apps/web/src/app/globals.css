@@ -15,14 +15,13 @@ body {
 body {
   @apply bg-paper text-ink antialiased;
   background-image:
-    radial-gradient(60rem 60rem at 80% -10%, rgba(43, 108, 255, 0.06), transparent 60%),
-    radial-gradient(50rem 50rem at -10% 10%, rgba(17, 135, 90, 0.05), transparent 55%);
+    radial-gradient(64rem 64rem at 85% -15%, rgba(10, 35, 202, 0.1), transparent 60%),
+    radial-gradient(52rem 52rem at -10% 5%, rgba(97, 159, 216, 0.12), transparent 55%);
   background-attachment: fixed;
 }
 
-/* Subtle, premium focus ring */
 *:focus-visible {
-  outline: 2px solid theme('colors.accent');
+  outline: 2px solid theme('colors.brand.DEFAULT');
   outline-offset: 2px;
   border-radius: 6px;
 }
@@ -35,12 +34,15 @@ body {
     @apply inline-flex items-center justify-center gap-2 rounded-full px-5 py-2.5 text-sm font-medium transition;
   }
   .btn-primary {
-    @apply btn bg-ink text-white hover:bg-ink-soft disabled:opacity-40 disabled:cursor-not-allowed;
+    @apply btn bg-brand text-white hover:bg-brand-indigo disabled:opacity-40 disabled:cursor-not-allowed;
   }
   .btn-ghost {
     @apply btn border border-line bg-white text-ink hover:bg-paper;
   }
   .chip {
     @apply inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium;
+  }
+  .brand-wordmark {
+    @apply font-display font-extrabold tracking-tight text-brand;
   }
 }

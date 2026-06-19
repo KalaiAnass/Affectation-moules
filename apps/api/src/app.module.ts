@@ -3,9 +3,6 @@ import { ConfigModule } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { AuditModule } from './audit/audit.module';
-import { AuthModule } from './auth/auth.module';
-import { JwtAuthGuard } from './auth/jwt-auth.guard';
-import { RolesGuard } from './auth/roles.guard';
 import { CompatibilityModule } from './compatibility/compatibility.module';
 import { HealthModule } from './health/health.module';
 import { MoldsModule } from './molds/molds.module';
@@ -18,7 +15,6 @@ import { PressesModule } from './presses/presses.module';
     // Rate limiting: 120 requests / minute / IP by default.
     ThrottlerModule.forRoot([{ ttl: 60_000, limit: 120 }]),
     PrismaModule,
-    AuthModule,
     PressesModule,
     MoldsModule,
     CompatibilityModule,
@@ -26,10 +22,10 @@ import { PressesModule } from './presses/presses.module';
     HealthModule,
   ],
   providers: [
-    // Guard order: rate-limit -> authenticate -> authorize.
+    // Open tool: no authentication barrier. Only rate-limiting is enforced.
+    // The auth/ module (JWT + OIDC + RBAC) is kept in the codebase and can be
+    // re-enabled by registering JwtAuthGuard / RolesGuard here if SSO is required.
     { provide: APP_GUARD, useClass: ThrottlerGuard },
-    { provide: APP_GUARD, useClass: JwtAuthGuard },
-    { provide: APP_GUARD, useClass: RolesGuard },
   ],
 })
 export class AppModule {}

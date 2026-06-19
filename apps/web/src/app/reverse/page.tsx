@@ -2,7 +2,6 @@
 
 import { motion } from 'framer-motion';
 import { useEffect, useState } from 'react';
-import { AuthGate } from '@/components/AuthGate';
 import { Select, type Option } from '@/components/Select';
 import { DecisionChip } from '@/components/status';
 import { api, ApiError } from '@/lib/api';
@@ -84,9 +83,5 @@ function ReverseInner() {
 }
 
 export default function ReversePage() {
-  return (
-    <AuthGate>
-      <ReverseInner />
-    </AuthGate>
-  );
+  return <ReverseInner />;
 }

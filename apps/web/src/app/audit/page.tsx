@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { AuthGate } from '@/components/AuthGate';
 import { DecisionChip } from '@/components/status';
 import { api, ApiError } from '@/lib/api';
 import type { AuditItem, Decision } from '@/lib/types';
@@ -84,9 +83,5 @@ function AuditInner() {
 }
 
 export default function AuditPage() {
-  return (
-    <AuthGate>
-      <AuditInner />
-    </AuthGate>
-  );
+  return <AuditInner />;
 }
