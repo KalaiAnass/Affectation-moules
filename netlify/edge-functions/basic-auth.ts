@@ -4,10 +4,14 @@ import type { Config, Context } from '@netlify/edge-functions';
  * Site-wide HTTP Basic Auth gate (runs on Netlify's edge, before any page is
  * served). Anyone visiting the site must log in.
  *
- * Default credentials are below. They can be overridden — without touching the
- * code — by setting BASIC_AUTH_USER / BASIC_AUTH_PASSWORD in Netlify
- * (Site configuration → Environment variables), which is recommended if you
- * want the password to stay secret (the repo is public).
+ * This is a duplicate of apps/web/netlify/edge-functions/basic-auth.ts placed at
+ * the repo root so the gate works whether the Netlify "base directory" is the
+ * repo root or apps/web. Only the one under the configured base directory is
+ * actually used; keep both in sync.
+ *
+ * Default credentials are below. Override them without touching the code by
+ * setting BASIC_AUTH_USER / BASIC_AUTH_PASSWORD in Netlify environment
+ * variables (recommended if the password must stay secret — the repo is public).
  */
 const DEFAULT_USER = 'Faurecia';
 const DEFAULT_PASS = '7799';
