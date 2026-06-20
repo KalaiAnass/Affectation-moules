@@ -2,11 +2,12 @@
 
 import { motion } from 'framer-motion';
 import { useEffect, useState } from 'react';
+import { ResultModal } from '@/components/ResultModal';
 import { Select, type Option } from '@/components/Select';
 import { DecisionChip } from '@/components/status';
 import { api, ApiError } from '@/lib/api';
 import { useI18n } from '@/lib/i18n';
-import type { MatrixEntry, Mold } from '@/lib/types';
+import type { CompatibilityResult, MatrixEntry, Mold } from '@/lib/types';
 
 export default function MatrixPage() {
   const { t, lang } = useI18n();
@@ -15,6 +16,7 @@ export default function MatrixPage() {
   const [entries, setEntries] = useState<MatrixEntry[] | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [detail, setDetail] = useState<CompatibilityResult | null>(null);
 
   useEffect(() => {
     api.molds().then(setMolds).catch((e: unknown) => setError(e instanceof ApiError ? e.message : t.check.loadError));
@@ -30,6 +32,15 @@ export default function MatrixPage() {
       .catch((e: unknown) => setError(e instanceof ApiError ? e.message : t.check.failed))
       .finally(() => setLoading(false));
   }, [moldId, lang, t]);
+
+  async function openDetail(pressId: string) {
+    if (!moldId) return;
+    try {
+      setDetail(await api.check(pressId, moldId, lang, false));
+    } catch (e) {
+      setError(e instanceof ApiError ? e.message : t.check.failed);
+    }
+  }
 
   const options: Option[] = molds.map((m) => ({ value: m.id, label: m.id, sublabel: m.designation.slice(0, 40) }));
   const compatible = entries?.filter((e) => e.decision === 'COMPATIBLE') ?? [];
@@ -59,25 +70,33 @@ export default function MatrixPage() {
           <p className="text-sm text-ink-muted">{t.matrix.summary(compatible.length, entries.length)}</p>
           <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
             {entries.map((e, i) => (
-              <motion.div
+              <motion.button
                 key={e.pressId}
+                type="button"
+                onClick={() => openDetail(e.pressId)}
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.25, delay: i * 0.02 }}
-                className="card flex items-center justify-between p-4"
+                className="card group flex w-full items-center justify-between p-4 text-left transition hover:border-brand/50 hover:shadow-hero"
               >
-                <div>
+                <div className="min-w-0">
                   <div className="font-medium">{e.pressId}</div>
-                  {e.decision === 'NOT_COMPATIBLE' && (
-                    <div className="text-xs text-ink-muted">{e.blockingRuleLabels.join(', ')}</div>
+                  {e.decision === 'NOT_COMPATIBLE' ? (
+                    <div className="truncate text-xs text-ink-muted">{e.blockingRuleLabels.join(', ')}</div>
+                  ) : (
+                    <div className="text-xs text-brand opacity-0 transition group-hover:opacity-100">
+                      {t.common.details} →
+                    </div>
                   )}
                 </div>
                 <DecisionChip decision={e.decision} requiresAdaptation={e.requiresAdaptation} />
-              </motion.div>
+              </motion.button>
             ))}
           </div>
         </>
       )}
+
+      <ResultModal result={detail} onClose={() => setDetail(null)} />
     </div>
   );
 }

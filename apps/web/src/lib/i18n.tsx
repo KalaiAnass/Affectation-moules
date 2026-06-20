@@ -45,7 +45,7 @@ export interface Strings {
     mold: string;
     result: string;
   };
-  common: { evaluating: string };
+  common: { evaluating: string; close: string; details: string };
 }
 
 /** All UI copy, keyed by language. Rule explanations are localized in engine.ts. */
@@ -110,7 +110,7 @@ const STRINGS: Record<Lang, Strings> = {
       mold: 'Moule',
       result: 'Résultat',
     },
-    common: { evaluating: 'Évaluation…' },
+    common: { evaluating: 'Évaluation…', close: 'Fermer', details: 'Détails' },
   },
   en: {
     nav: { check: 'Check', matrix: 'Matrix', reverse: 'Reverse', audit: 'Audit', subtitle: 'Mold ↔ Press' },
@@ -172,7 +172,7 @@ const STRINGS: Record<Lang, Strings> = {
       mold: 'Mold',
       result: 'Result',
     },
-    common: { evaluating: 'Evaluating…' },
+    common: { evaluating: 'Evaluating…', close: 'Close', details: 'Details' },
   },
 };
 

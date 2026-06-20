@@ -72,13 +72,18 @@ export const api = {
   async molds(): Promise<Mold[]> {
     return moldsSorted();
   },
-  async check(pressId: string, moldId: string, lang: Lang = 'fr'): Promise<CompatibilityResult> {
+  async check(
+    pressId: string,
+    moldId: string,
+    lang: Lang = 'fr',
+    record = true,
+  ): Promise<CompatibilityResult> {
     const press = getPress(pressId);
     const mold = getMold(moldId);
     if (!press) throw new ApiError(404, `Press "${pressId}" not found`);
     if (!mold) throw new ApiError(404, `Mold "${moldId}" not found`);
     const result = checkCompatibility(press, mold, lang);
-    recordAudit(result);
+    if (record) recordAudit(result);
     return result;
   },
   async matrix(moldId: string, lang: Lang = 'fr'): Promise<{ mold: Mold; entries: MatrixEntry[] }> {

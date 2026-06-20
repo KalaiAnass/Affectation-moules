@@ -2,11 +2,12 @@
 
 import { motion } from 'framer-motion';
 import { useEffect, useState } from 'react';
+import { ResultModal } from '@/components/ResultModal';
 import { Select, type Option } from '@/components/Select';
 import { DecisionChip } from '@/components/status';
 import { api, ApiError } from '@/lib/api';
 import { useI18n } from '@/lib/i18n';
-import type { Press, ReverseEntry } from '@/lib/types';
+import type { CompatibilityResult, Press, ReverseEntry } from '@/lib/types';
 
 export default function ReversePage() {
   const { t, lang } = useI18n();
@@ -15,6 +16,7 @@ export default function ReversePage() {
   const [entries, setEntries] = useState<ReverseEntry[] | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [detail, setDetail] = useState<CompatibilityResult | null>(null);
 
   useEffect(() => {
     api.presses().then(setPresses).catch((e: unknown) => setError(e instanceof ApiError ? e.message : t.check.loadError));
@@ -30,6 +32,15 @@ export default function ReversePage() {
       .catch((e: unknown) => setError(e instanceof ApiError ? e.message : t.check.failed))
       .finally(() => setLoading(false));
   }, [pressId, lang, t]);
+
+  async function openDetail(moldId: string) {
+    if (!pressId) return;
+    try {
+      setDetail(await api.check(pressId, moldId, lang, false));
+    } catch (e) {
+      setError(e instanceof ApiError ? e.message : t.check.failed);
+    }
+  }
 
   const options: Option[] = presses.map((p) => ({
     value: p.id,
@@ -63,12 +74,14 @@ export default function ReversePage() {
           <p className="text-sm text-ink-muted">{t.reverse.summary(compatible.length, entries.length)}</p>
           <div className="space-y-2">
             {entries.map((e, i) => (
-              <motion.div
+              <motion.button
                 key={e.moldId}
+                type="button"
+                onClick={() => openDetail(e.moldId)}
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.25, delay: i * 0.02 }}
-                className="card flex items-center justify-between gap-4 p-4"
+                className="card group flex w-full items-center justify-between gap-4 p-4 text-left transition hover:border-brand/50 hover:shadow-hero"
               >
                 <div className="min-w-0">
                   <div className="font-medium">{e.moldId}</div>
@@ -77,12 +90,19 @@ export default function ReversePage() {
                     {e.decision === 'NOT_COMPATIBLE' && ` · ${e.blockingRuleLabels.join(', ')}`}
                   </div>
                 </div>
-                <DecisionChip decision={e.decision} requiresAdaptation={e.requiresAdaptation} />
-              </motion.div>
+                <div className="flex items-center gap-3">
+                  <span className="hidden text-xs text-brand opacity-0 transition group-hover:opacity-100 sm:inline">
+                    {t.common.details} →
+                  </span>
+                  <DecisionChip decision={e.decision} requiresAdaptation={e.requiresAdaptation} />
+                </div>
+              </motion.button>
             ))}
           </div>
         </>
       )}
+
+      <ResultModal result={detail} onClose={() => setDetail(null)} />
     </div>
   );
 }
