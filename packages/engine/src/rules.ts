@@ -59,10 +59,13 @@ export function ruleThickness(press: Press, mold: Mold): RuleResult {
 }
 
 /**
- * Rules 2 / 3 / 4 — Mountability (entrée).
- *   - Standard:  Lm ≤ Lc-5 AND Hm ≤ Hc-5                          => PASS
- *   - Rotated:   Lm > Lc-5 AND Hm ≤ Hc-5 AND Em ≤ Lc-5 AND Lm ≤ Lp-5 => ADAPTATION
- *   - Otherwise                                                   => FAIL
+ * Rules 2 / 3 / 4 — Mountability (entrée). Quadrants on (Lm vs Lc-5, Hm vs Hc-5):
+ *   - Lm ≤ Lc-5 & Hm ≤ Hc-5            => PASS  (standard entry)
+ *   - Lm ≤ Lc-5 & Hm > Hc-5            => turn the mold before lowering it in:
+ *                                          OK (ADAPTATION) if Em ≤ Lc-5, else FAIL
+ *   - Lm > Lc-5 & Hm ≤ Hc-5            => rotate 90°: OK (ADAPTATION) if
+ *                                          Em ≤ Lc-5 AND Lm ≤ Lp-5, else FAIL
+ *   - Lm > Lc-5 & Hm > Hc-5            => FAIL (too large in both directions)
  */
 export function ruleMountability(press: Press, mold: Mold): RuleResult {
   const c = CLEARANCE_MM;
@@ -79,9 +82,11 @@ export function ruleMountability(press: Press, mold: Mold): RuleResult {
     mold: `L ${Lm} × H ${Hm} × E ${Em} mm`,
   } as const;
 
-  const fitsStdW = Lm <= Lc - c;
-  const fitsStdH = Hm <= Hc - c;
-  if (fitsStdW && fitsStdH) {
+  const wFits = Lm <= Lc - c;
+  const hFits = Hm <= Hc - c;
+
+  // Standard entry.
+  if (wFits && hFits) {
     return {
       ...base,
       status: 'PASS',
@@ -89,21 +94,38 @@ export function ruleMountability(press: Press, mold: Mold): RuleResult {
     };
   }
 
-  // Rotation is only considered when the mold is too wide for a standard entry.
-  if (!fitsStdW) {
-    const rotH = Hm <= Hc - c;
-    const rotThick = Em <= Lc - c;
-    const rotPlaten = Lm <= Lp - c;
-    if (rotH && rotThick && rotPlaten) {
+  // Width fits but the mold is too tall: it must be turned before being lowered
+  // into the press from the top. Possible only if its thickness clears the
+  // tie-bar gap (Em ≤ Lc-5); otherwise it cannot enter.
+  if (wFits && !hFits) {
+    if (Em <= Lc - c) {
       return {
         ...base,
         status: 'ADAPTATION',
-        details: `Too wide for standard entry (Lm ${Lm} > ${Lc - c}) but fits rotated: Hm ${Hm} ≤ ${Hc - c}, Em ${Em} ≤ ${Lc - c}, Lm ${Lm} ≤ ${Lp - c}.`,
+        details: `Too tall for standard entry (Hm ${Hm} > ${Hc - c}); fits by turning the mold (Em ${Em} ≤ ${Lc - c}).`,
+        instruction: 'Turn the mold before lowering it into the press from the top.',
+      };
+    }
+    return {
+      ...base,
+      status: 'FAIL',
+      details: `Too tall (Hm ${Hm} > ${Hc - c}) and too thick to turn in (Em ${Em} > ${Lc - c}).`,
+    };
+  }
+
+  // Too wide but height fits: rotate 90° during insertion.
+  if (!wFits && hFits) {
+    const rotThick = Em <= Lc - c;
+    const rotPlaten = Lm <= Lp - c;
+    if (rotThick && rotPlaten) {
+      return {
+        ...base,
+        status: 'ADAPTATION',
+        details: `Too wide for standard entry (Lm ${Lm} > ${Lc - c}) but fits rotated: Em ${Em} ≤ ${Lc - c}, Lm ${Lm} ≤ ${Lp - c}.`,
         instruction: 'Rotation required during insertion.',
       };
     }
     const reasons: string[] = [];
-    if (!rotH) reasons.push(`Hm ${Hm} > ${Hc - c}`);
     if (!rotThick) reasons.push(`Em ${Em} > ${Lc - c}`);
     if (!rotPlaten) reasons.push(`Lm ${Lm} > platen ${Lp - c}`);
     return {
@@ -113,11 +135,11 @@ export function ruleMountability(press: Press, mold: Mold): RuleResult {
     };
   }
 
-  // Fits width but is too tall — rotation does not help.
+  // Too large in both directions.
   return {
     ...base,
     status: 'FAIL',
-    details: `Height exceeds tie-bar height (Hm ${Hm} > ${Hc - c}); rotation not applicable.`,
+    details: `Too large in both directions (Lm ${Lm} > ${Lc - c} and Hm ${Hm} > ${Hc - c}).`,
   };
 }
 

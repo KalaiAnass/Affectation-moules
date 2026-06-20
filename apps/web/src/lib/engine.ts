@@ -105,9 +105,11 @@ function ruleMountability(press: Press, mold: Mold, lang: Lang): RuleResult {
     mold: `L ${Lm} × H ${Hm} × E ${Em} mm`,
   } as const;
 
-  const fitsStdW = Lm <= Lc - c;
-  const fitsStdH = Hm <= Hc - c;
-  if (fitsStdW && fitsStdH) {
+  const wFits = Lm <= Lc - c;
+  const hFits = Hm <= Hc - c;
+
+  // Standard entry.
+  if (wFits && hFits) {
     return {
       ...base,
       status: 'PASS',
@@ -117,22 +119,45 @@ function ruleMountability(press: Press, mold: Mold, lang: Lang): RuleResult {
     };
   }
 
-  if (!fitsStdW) {
-    const rotH = Hm <= Hc - c;
-    const rotThick = Em <= Lc - c;
-    const rotPlaten = Lm <= Lp - c;
-    if (rotH && rotThick && rotPlaten) {
+  // Width fits but the mold is too tall: turn it before lowering it in from the
+  // top. Possible only if its thickness clears the tie-bar gap (Em ≤ Lc-5).
+  if (wFits && !hFits) {
+    if (Em <= Lc - c) {
       return {
         ...base,
         status: 'ADAPTATION',
         details: fr
-          ? `Trop large pour une entrée standard (Lm ${Lm} > ${Lc - c}) mais passe en rotation : Hm ${Hm} ≤ ${Hc - c}, Em ${Em} ≤ ${Lc - c}, Lm ${Lm} ≤ ${Lp - c}.`
-          : `Too wide for standard entry (Lm ${Lm} > ${Lc - c}) but fits rotated: Hm ${Hm} ≤ ${Hc - c}, Em ${Em} ≤ ${Lc - c}, Lm ${Lm} ≤ ${Lp - c}.`,
+          ? `Trop haut pour une entrée standard (Hm ${Hm} > ${Hc - c}) ; passe en tournant le moule (Em ${Em} ≤ ${Lc - c}).`
+          : `Too tall for standard entry (Hm ${Hm} > ${Hc - c}); fits by turning the mold (Em ${Em} ≤ ${Lc - c}).`,
+        instruction: fr
+          ? 'Tourner le moule avant de le descendre par le haut dans la presse.'
+          : 'Turn the mold before lowering it into the press from the top.',
+      };
+    }
+    return {
+      ...base,
+      status: 'FAIL',
+      details: fr
+        ? `Trop haut (Hm ${Hm} > ${Hc - c}) et trop épais pour entrer en tournant (Em ${Em} > ${Lc - c}).`
+        : `Too tall (Hm ${Hm} > ${Hc - c}) and too thick to turn in (Em ${Em} > ${Lc - c}).`,
+    };
+  }
+
+  // Too wide but height fits: rotate 90° during insertion.
+  if (!wFits && hFits) {
+    const rotThick = Em <= Lc - c;
+    const rotPlaten = Lm <= Lp - c;
+    if (rotThick && rotPlaten) {
+      return {
+        ...base,
+        status: 'ADAPTATION',
+        details: fr
+          ? `Trop large pour une entrée standard (Lm ${Lm} > ${Lc - c}) mais passe en rotation : Em ${Em} ≤ ${Lc - c}, Lm ${Lm} ≤ ${Lp - c}.`
+          : `Too wide for standard entry (Lm ${Lm} > ${Lc - c}) but fits rotated: Em ${Em} ≤ ${Lc - c}, Lm ${Lm} ≤ ${Lp - c}.`,
         instruction: fr ? "Rotation requise lors de l'insertion." : 'Rotation required during insertion.',
       };
     }
     const reasons: string[] = [];
-    if (!rotH) reasons.push(`Hm ${Hm} > ${Hc - c}`);
     if (!rotThick) reasons.push(`Em ${Em} > ${Lc - c}`);
     if (!rotPlaten) reasons.push(fr ? `Lm ${Lm} > plateau ${Lp - c}` : `Lm ${Lm} > platen ${Lp - c}`);
     return {
@@ -144,12 +169,13 @@ function ruleMountability(press: Press, mold: Mold, lang: Lang): RuleResult {
     };
   }
 
+  // Too large in both directions.
   return {
     ...base,
     status: 'FAIL',
     details: fr
-      ? `Hauteur supérieure à l'entre-colonnes (Hm ${Hm} > ${Hc - c}) ; rotation inapplicable.`
-      : `Height exceeds tie-bar height (Hm ${Hm} > ${Hc - c}); rotation not applicable.`,
+      ? `Trop grand dans les deux sens (Lm ${Lm} > ${Lc - c} et Hm ${Hm} > ${Hc - c}).`
+      : `Too large in both directions (Lm ${Lm} > ${Lc - c} and Hm ${Hm} > ${Hc - c}).`,
   };
 }
 

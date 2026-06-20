@@ -189,6 +189,22 @@ describe('individual rules', () => {
     expect(result.decision).toBe('NOT_COMPATIBLE');
   });
 
+  it('Mountability — width fits but too tall: turn the mold (ADAPTATION) when Em clears Lc', () => {
+    // bigPress: Lc=Hc=2000 (so -5 => 1995), Lp=2500. Width OK, too tall, Em fits.
+    const tall: Mold = { ...tinyMold, widthLm: 500, heightHm: 1998, thicknessEm: 400 };
+    const mount = checkCompatibility(bigPress, tall).rules.find((r) => r.rule === 'mountability')!;
+    expect(mount.status).toBe('ADAPTATION');
+    expect(mount.instruction).toMatch(/turn/i);
+  });
+
+  it('Mountability — too tall and too thick to turn in => FAIL', () => {
+    const tallThick: Mold = { ...tinyMold, widthLm: 500, heightHm: 1998, thicknessEm: 1998 };
+    const result = checkCompatibility(bigPress, tallThick);
+    const mount = result.rules.find((r) => r.rule === 'mountability')!;
+    expect(mount.status).toBe('FAIL');
+    expect(result.decision).toBe('NOT_COMPATIBLE');
+  });
+
   it('Rule 5 — same MAG but press without studs => centering washer adaptation', () => {
     const result = checkCompatibility({ ...bigPress, hasLocatingStuds: false }, tinyMold);
     const mag = result.rules.find((r) => r.rule === 'mag')!;
