@@ -14,6 +14,12 @@ for a production deployment.
 > { provide: APP_GUARD, useClass: RolesGuard },
 > ```
 > and re-import `AuthModule`. The web app's `AuthGate`/login can be restored from git history.
+>
+> **Static (Netlify) deploy:** the front-end is gated with **HTTP Basic Auth** at the edge
+> (`apps/web/netlify/edge-functions/basic-auth.ts`). Set `BASIC_AUTH_USER` and
+> `BASIC_AUTH_PASSWORD` in Netlify (Site settings → Environment variables) and redeploy.
+> Credentials are checked server-side and never reach the browser; if unset, the gate stays
+> open so a deploy can't lock you out.
 
 - **Production: OIDC (Azure AD / Entra ID).** Set `OIDC_ISSUER`, `OIDC_AUDIENCE` and
   optionally `OIDC_JWKS_URI`. Tokens are validated as **RS256** against the provider's JWKS
