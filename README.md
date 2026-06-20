@@ -8,8 +8,8 @@ Every decision is **fully explainable**: the platform evaluates ten engineering 
 returns, for each, the press value, the mold value, and the reason — plus any required
 adaptation (rotation, centering washer, locating studs…).
 
-> Built from the plant's own `Équipement des presses` workbook. The 26 presses and 16
-> molds shipped as seed data are extracted directly from that file and validated against
+> Built from the plant's own `Équipement des presses` workbook. The 24 in-service presses
+> and 16 molds shipped as seed data are extracted directly from that file and validated against
 > its own worked example (`2700T2 × 978 → NOT COMPATIBLE`, heating zones 72 < 85).
 
 ---

@@ -144,6 +144,9 @@ const moldRows = parseSheet(read('xl/worksheets/sheet1.xml'), sst); // Feuil1 = 
 
 const G = (row, col) => (row[col] === undefined ? null : row[col]);
 
+// Presses decommissioned / no longer in service — excluded from the dataset.
+const EXCLUDED_PRESS_IDS = new Set(['2100T', '1000T4']);
+
 // Presses — data rows 5..39, identified by a non-empty id in column B.
 const presses = [];
 for (let r = 5; r <= 39; r++) {
@@ -151,6 +154,7 @@ for (let r = 5; r <= 39; r++) {
   if (!row) continue;
   const id = cleanText(G(row, 'B'));
   if (!id || /^moulage/i.test(id)) continue;
+  if (EXCLUDED_PRESS_IDS.has(id)) continue;
   presses.push({
     id,
     brand: cleanText(G(row, 'C')),

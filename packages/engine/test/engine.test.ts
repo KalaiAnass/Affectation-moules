@@ -100,8 +100,15 @@ describe('normalization', () => {
 
 describe('dataset integrity', () => {
   it('loads the full Hénin-Beaumont dataset', () => {
-    expect(listPresses()).toHaveLength(26);
+    expect(listPresses()).toHaveLength(24);
     expect(listMolds()).toHaveLength(16);
+  });
+  it('excludes decommissioned presses (2100T, 1000T4)', () => {
+    const ids = listPresses().map((p) => p.id);
+    expect(ids).not.toContain('2100T');
+    expect(ids).not.toContain('1000T4');
+    expect(ids).toContain('2100T2');
+    expect(ids).toContain('1000T5');
   });
   it('has the expected key values for press 2700T2', () => {
     const p = getPress('2700T2')!;
@@ -209,7 +216,7 @@ describe('individual rules', () => {
 describe('matrix & reverse search', () => {
   it('produces one matrix entry per press', () => {
     const matrix = compatibilityMatrix(getMold('812')!, listPresses());
-    expect(matrix).toHaveLength(26);
+    expect(matrix).toHaveLength(24);
   });
   it('compatiblePresses returns a subset of all press ids', () => {
     const all = new Set(listPresses().map((p) => p.id));
