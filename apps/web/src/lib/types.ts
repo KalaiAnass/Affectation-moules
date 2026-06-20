@@ -1,6 +1,61 @@
 export type RuleStatus = 'PASS' | 'FAIL' | 'ADAPTATION';
 export type Decision = 'COMPATIBLE' | 'NOT_COMPATIBLE';
 
+/** An injection press (machine) and its mounting envelope. */
+export interface Press {
+  id: string;
+  brand: string;
+  commissioningYear: number | null;
+  magType: string;
+  magTypeRaw: string;
+  reversibleWasherDiameter: number | null;
+  hasLocatingStuds: boolean;
+  maxOpeningStroke: number | null;
+  minThickness: number;
+  maxThickness: number;
+  tieBarWidth: number;
+  tieBarHeight: number;
+  platenWidth: number;
+  platenHeight: number;
+  hydraulicPF: number;
+  hydraulicPM: number;
+  sequentialMax: number | null;
+  sequentialOutputs: number;
+  heatingZones: number;
+  connectorType: string;
+  thermoPF: number;
+  thermoPM: number;
+  thermoGrid: number;
+  clampingForce: number;
+}
+
+/** An injection mold (tool) and its mounting requirements. */
+export interface Mold {
+  id: string;
+  projectRef: string;
+  designation: string;
+  heightHm: number;
+  widthLm: number;
+  thicknessEm: number;
+  isStandard: boolean;
+  isReversible: boolean;
+  cavities: string;
+  magType: string;
+  magTypeRaw: string;
+  centeringWasherDiameter: number | null;
+  hydraulicPF: number;
+  hydraulicPM: number;
+  heatingZones: number;
+  connectorType: string;
+  waterCircuits: number | null;
+  nozzles: number;
+  sequentialNozzles: number;
+  thermoPF: number;
+  thermoPM: number;
+  thermoGrid: number;
+  requiredClampingForce: number;
+}
+
 export interface RuleResult {
   rule: string;
   label: string;
@@ -21,29 +76,6 @@ export interface CompatibilityResult {
   blockingRules: RuleResult[];
 }
 
-export interface Press {
-  id: string;
-  brand: string;
-  commissioningYear: number | null;
-  magTypeRaw: string;
-  clampingForce: number;
-  heatingZones: number;
-  tieBarWidth: number;
-  tieBarHeight: number;
-}
-
-export interface Mold {
-  id: string;
-  designation: string;
-  projectRef: string;
-  heightHm: number;
-  widthLm: number;
-  thicknessEm: number;
-  magTypeRaw: string;
-  requiredClampingForce: number;
-  heatingZones: number;
-}
-
 export interface MatrixEntry {
   pressId: string;
   decision: Decision;
@@ -57,13 +89,6 @@ export interface ReverseEntry {
   decision: Decision;
   requiresAdaptation: boolean;
   blockingRuleLabels: string[];
-}
-
-export interface AuthUser {
-  userId: string;
-  email: string;
-  name?: string;
-  roles: string[];
 }
 
 export interface AuditItem {
