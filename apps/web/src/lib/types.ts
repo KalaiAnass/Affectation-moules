@@ -1,3 +1,4 @@
+export type Lang = 'fr' | 'en';
 export type RuleStatus = 'PASS' | 'FAIL' | 'ADAPTATION';
 export type Decision = 'COMPATIBLE' | 'NOT_COMPATIBLE';
 

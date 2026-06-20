@@ -5,9 +5,11 @@ import { useEffect, useState } from 'react';
 import { Select, type Option } from '@/components/Select';
 import { DecisionChip } from '@/components/status';
 import { api, ApiError } from '@/lib/api';
+import { useI18n } from '@/lib/i18n';
 import type { Press, ReverseEntry } from '@/lib/types';
 
-function ReverseInner() {
+export default function ReversePage() {
+  const { t, lang } = useI18n();
   const [presses, setPresses] = useState<Press[]>([]);
   const [pressId, setPressId] = useState<string | null>(null);
   const [entries, setEntries] = useState<ReverseEntry[] | null>(null);
@@ -15,19 +17,19 @@ function ReverseInner() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    api.presses().then(setPresses).catch((e: unknown) => setError(e instanceof ApiError ? e.message : 'Load failed'));
-  }, []);
+    api.presses().then(setPresses).catch((e: unknown) => setError(e instanceof ApiError ? e.message : t.check.loadError));
+  }, [t]);
 
   useEffect(() => {
     if (!pressId) return;
     setLoading(true);
     setError(null);
     api
-      .reverse(pressId)
+      .reverse(pressId, lang)
       .then((r) => setEntries(r.entries))
-      .catch((e: unknown) => setError(e instanceof ApiError ? e.message : 'Failed'))
+      .catch((e: unknown) => setError(e instanceof ApiError ? e.message : t.check.failed))
       .finally(() => setLoading(false));
-  }, [pressId]);
+  }, [pressId, lang, t]);
 
   const options: Option[] = presses.map((p) => ({
     value: p.id,
@@ -39,23 +41,26 @@ function ReverseInner() {
   return (
     <div className="space-y-6">
       <header>
-        <h1 className="text-2xl font-semibold tracking-tight">Reverse search</h1>
-        <p className="mt-1 text-sm text-ink-muted">Find every mold that fits a given press.</p>
+        <h1 className="font-display text-2xl font-bold tracking-tight">{t.reverse.title}</h1>
+        <p className="mt-1 text-sm text-ink-muted">{t.reverse.subtitle}</p>
       </header>
 
       <div className="card max-w-md p-5">
-        <Select label="Press" placeholder="Select a press" options={options} value={pressId} onChange={setPressId} />
+        <Select
+          label={t.select.press}
+          placeholder={t.select.pressPlaceholder}
+          options={options}
+          value={pressId}
+          onChange={setPressId}
+        />
       </div>
 
       {error && <p className="rounded-lg bg-bad-soft px-3 py-2 text-sm text-bad">{error}</p>}
-      {loading && <p className="text-sm text-ink-muted">Evaluating…</p>}
+      {loading && <p className="text-sm text-ink-muted">{t.common.evaluating}</p>}
 
       {entries && !loading && (
         <>
-          <p className="text-sm text-ink-muted">
-            <span className="font-medium text-ink">{compatible.length}</span> of {entries.length} molds are
-            compatible.
-          </p>
+          <p className="text-sm text-ink-muted">{t.reverse.summary(compatible.length, entries.length)}</p>
           <div className="space-y-2">
             {entries.map((e, i) => (
               <motion.div
@@ -80,8 +85,4 @@ function ReverseInner() {
       )}
     </div>
   );
-}
-
-export default function ReversePage() {
-  return <ReverseInner />;
 }

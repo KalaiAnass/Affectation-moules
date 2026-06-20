@@ -1,19 +1,22 @@
 'use client';
 
+import { useI18n } from '@/lib/i18n';
 import type { Decision, RuleStatus } from '@/lib/types';
 
-const ruleStyles: Record<RuleStatus, { chip: string; icon: string; label: string }> = {
-  PASS: { chip: 'bg-ok-soft text-ok', icon: '✓', label: 'Pass' },
-  FAIL: { chip: 'bg-bad-soft text-bad', icon: '✗', label: 'Fail' },
-  ADAPTATION: { chip: 'bg-warn-soft text-warn', icon: '⚠', label: 'Adaptation' },
+const ruleStyle: Record<RuleStatus, { chip: string; icon: string }> = {
+  PASS: { chip: 'bg-ok-soft text-ok', icon: '✓' },
+  FAIL: { chip: 'bg-bad-soft text-bad', icon: '✗' },
+  ADAPTATION: { chip: 'bg-warn-soft text-warn', icon: '⚠' },
 };
 
 export function RuleStatusChip({ status }: { status: RuleStatus }) {
-  const s = ruleStyles[status];
+  const { t } = useI18n();
+  const s = ruleStyle[status];
+  const label = status === 'PASS' ? t.chip.pass : status === 'FAIL' ? t.chip.fail : t.chip.adaptation;
   return (
     <span className={`chip ${s.chip}`}>
       <span aria-hidden>{s.icon}</span>
-      {s.label}
+      {label}
     </span>
   );
 }
@@ -25,13 +28,14 @@ export function DecisionChip({
   decision: Decision;
   requiresAdaptation?: boolean;
 }) {
+  const { t } = useI18n();
   if (decision === 'NOT_COMPATIBLE') {
-    return <span className="chip bg-bad-soft text-bad">✗ Not compatible</span>;
+    return <span className="chip bg-bad-soft text-bad">✗ {t.chip.notCompatible}</span>;
   }
   if (requiresAdaptation) {
-    return <span className="chip bg-warn-soft text-warn">⚠ Compatible · adaptation</span>;
+    return <span className="chip bg-warn-soft text-warn">⚠ {t.chip.compatibleAdaptation}</span>;
   }
-  return <span className="chip bg-ok-soft text-ok">✓ Compatible</span>;
+  return <span className="chip bg-ok-soft text-ok">✓ {t.chip.compatible}</span>;
 }
 
 export const ruleAccent: Record<RuleStatus, string> = {

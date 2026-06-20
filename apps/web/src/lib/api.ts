@@ -16,7 +16,15 @@ import {
   getPress,
   reverseSearch,
 } from './engine';
-import type { AuditItem, CompatibilityResult, MatrixEntry, Mold, Press, ReverseEntry } from './types';
+import type {
+  AuditItem,
+  CompatibilityResult,
+  Lang,
+  MatrixEntry,
+  Mold,
+  Press,
+  ReverseEntry,
+} from './types';
 
 export class ApiError extends Error {
   constructor(
@@ -64,24 +72,24 @@ export const api = {
   async molds(): Promise<Mold[]> {
     return moldsSorted();
   },
-  async check(pressId: string, moldId: string): Promise<CompatibilityResult> {
+  async check(pressId: string, moldId: string, lang: Lang = 'fr'): Promise<CompatibilityResult> {
     const press = getPress(pressId);
     const mold = getMold(moldId);
     if (!press) throw new ApiError(404, `Press "${pressId}" not found`);
     if (!mold) throw new ApiError(404, `Mold "${moldId}" not found`);
-    const result = checkCompatibility(press, mold);
+    const result = checkCompatibility(press, mold, lang);
     recordAudit(result);
     return result;
   },
-  async matrix(moldId: string): Promise<{ mold: Mold; entries: MatrixEntry[] }> {
+  async matrix(moldId: string, lang: Lang = 'fr'): Promise<{ mold: Mold; entries: MatrixEntry[] }> {
     const mold = getMold(moldId);
     if (!mold) throw new ApiError(404, `Mold "${moldId}" not found`);
-    return { mold, entries: compatibilityMatrix(mold, pressesSorted()) };
+    return { mold, entries: compatibilityMatrix(mold, pressesSorted(), lang) };
   },
-  async reverse(pressId: string): Promise<{ press: Press; entries: ReverseEntry[] }> {
+  async reverse(pressId: string, lang: Lang = 'fr'): Promise<{ press: Press; entries: ReverseEntry[] }> {
     const press = getPress(pressId);
     if (!press) throw new ApiError(404, `Press "${pressId}" not found`);
-    return { press, entries: reverseSearch(press, moldsSorted()) };
+    return { press, entries: reverseSearch(press, moldsSorted(), lang) };
   },
   async audit(skip = 0, take = 50): Promise<{ total: number; items: AuditItem[] }> {
     const all = readAudit();

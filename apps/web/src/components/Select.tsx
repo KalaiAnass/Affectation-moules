@@ -2,6 +2,7 @@
 
 import { AnimatePresence, motion } from 'framer-motion';
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { useI18n } from '@/lib/i18n';
 
 export interface Option {
   value: string;
@@ -20,6 +21,7 @@ interface SelectProps {
 
 /** Minimal, accessible, searchable select with a tasteful motion panel. */
 export function Select({ label, placeholder, options, value, onChange, disabled }: SelectProps) {
+  const { t } = useI18n();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
   const ref = useRef<HTMLDivElement>(null);
@@ -84,13 +86,13 @@ export function Select({ label, placeholder, options, value, onChange, disabled 
                 autoFocus
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder="Search…"
+                placeholder={t.select.search}
                 className="w-full rounded-xl bg-paper px-3 py-2 text-sm outline-none"
               />
             </div>
             <ul className="max-h-72 overflow-auto p-1">
               {filtered.length === 0 && (
-                <li className="px-3 py-6 text-center text-sm text-ink-muted">No matches</li>
+                <li className="px-3 py-6 text-center text-sm text-ink-muted">{t.select.noMatch}</li>
               )}
               {filtered.map((o) => (
                 <li key={o.value}>
