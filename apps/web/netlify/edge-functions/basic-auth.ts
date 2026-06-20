@@ -98,8 +98,10 @@ export default async (request: Request, _context: Context): Promise<Response | v
       return new Response(null, {
         status: 303,
         headers: {
+          // Session cookie (no Max-Age/Expires): the login is required again
+          // every time the browser is (re)opened — it is not remembered.
           Location: '/',
-          'Set-Cookie': `${COOKIE}=${expected}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=43200`,
+          'Set-Cookie': `${COOKIE}=${expected}; Path=/; HttpOnly; Secure; SameSite=Lax`,
           'Cache-Control': 'no-store',
         },
       });
