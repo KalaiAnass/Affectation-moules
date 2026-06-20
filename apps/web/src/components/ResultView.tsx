@@ -78,7 +78,11 @@ function RuleCard({ rule, index, lang }: { rule: RuleResult; index: number; lang
 
       <p className="mt-3 text-sm text-ink-muted">{rule.details}</p>
       {rule.instruction && (
-        <p className="mt-2 rounded-lg bg-warn-soft px-3 py-2 text-sm font-medium text-warn">
+        <p
+          className={`mt-2 rounded-lg px-3 py-2 text-sm font-medium ${
+            rule.status === 'PASS' ? 'bg-ok-soft text-ok' : 'bg-warn-soft text-warn'
+          }`}
+        >
           → {rule.instruction}
         </p>
       )}

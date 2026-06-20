@@ -139,9 +139,9 @@ describe('canonical workbook example: 2700T2 × 978 = NOK on heating zones', () 
     expect(zones.mold).toContain('85');
     expect(result.blockingRules.map((r) => r.rule)).toContain('heatingZones');
   });
-  it('still flags the oversize entry as a rotation adaptation (not a hard block)', () => {
+  it('passes the oversize entry as a rotation (green, not a block) with its instruction', () => {
     const mount = result.rules.find((r) => r.rule === 'mountability')!;
-    expect(mount.status).toBe('ADAPTATION');
+    expect(mount.status).toBe('PASS');
     expect(mount.instruction).toMatch(/rotation/i);
   });
 });
@@ -174,10 +174,10 @@ describe('individual rules', () => {
     expect(result.decision).toBe('NOT_COMPATIBLE');
   });
 
-  it('Rule 3 — an over-wide mold that fits rotated is an ADAPTATION', () => {
+  it('Rule 3 — an over-wide mold that fits rotated PASSes (turning is a normal SMED step)', () => {
     const wide: Mold = { ...tinyMold, widthLm: 1998, heightHm: 500, thicknessEm: 400 };
     const mount = checkCompatibility(bigPress, wide).rules.find((r) => r.rule === 'mountability')!;
-    expect(mount.status).toBe('ADAPTATION');
+    expect(mount.status).toBe('PASS');
     expect(mount.instruction).toMatch(/rotation/i);
   });
 
@@ -189,12 +189,15 @@ describe('individual rules', () => {
     expect(result.decision).toBe('NOT_COMPATIBLE');
   });
 
-  it('Mountability — width fits but too tall: turn the mold (ADAPTATION) when Em clears Lc', () => {
+  it('Mountability — width fits but too tall: turning the mold PASSes when Em clears Lc', () => {
     // bigPress: Lc=Hc=2000 (so -5 => 1995), Lp=2500. Width OK, too tall, Em fits.
     const tall: Mold = { ...tinyMold, widthLm: 500, heightHm: 1998, thicknessEm: 400 };
-    const mount = checkCompatibility(bigPress, tall).rules.find((r) => r.rule === 'mountability')!;
-    expect(mount.status).toBe('ADAPTATION');
+    const result = checkCompatibility(bigPress, tall);
+    const mount = result.rules.find((r) => r.rule === 'mountability')!;
+    expect(mount.status).toBe('PASS');
     expect(mount.instruction).toMatch(/turn/i);
+    // turning alone is not an anomaly => no adaptation flag from mountability
+    expect(result.rules.find((r) => r.rule === 'mountability')!.status).not.toBe('ADAPTATION');
   });
 
   it('Mountability — too tall and too thick to turn in => FAIL', () => {

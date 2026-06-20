@@ -123,9 +123,10 @@ function ruleMountability(press: Press, mold: Mold, lang: Lang): RuleResult {
   // top. Possible only if its thickness clears the tie-bar gap (Em ≤ Lc-5).
   if (wFits && !hFits) {
     if (Em <= Lc - c) {
+      // Turning the mold is a normal SMED step, not an anomaly => PASS (green).
       return {
         ...base,
-        status: 'ADAPTATION',
+        status: 'PASS',
         details: fr
           ? `Trop haut pour une entrée standard (Hm ${Hm} > ${Hc - c}) ; passe en tournant le moule (Em ${Em} ≤ ${Lc - c}).`
           : `Too tall for standard entry (Hm ${Hm} > ${Hc - c}); fits by turning the mold (Em ${Em} ≤ ${Lc - c}).`,
@@ -148,9 +149,10 @@ function ruleMountability(press: Press, mold: Mold, lang: Lang): RuleResult {
     const rotThick = Em <= Lc - c;
     const rotPlaten = Lm <= Lp - c;
     if (rotThick && rotPlaten) {
+      // 90° rotation is a normal SMED step, not an anomaly => PASS (green).
       return {
         ...base,
-        status: 'ADAPTATION',
+        status: 'PASS',
         details: fr
           ? `Trop large pour une entrée standard (Lm ${Lm} > ${Lc - c}) mais passe en rotation : Em ${Em} ≤ ${Lc - c}, Lm ${Lm} ≤ ${Lp - c}.`
           : `Too wide for standard entry (Lm ${Lm} > ${Lc - c}) but fits rotated: Em ${Em} ≤ ${Lc - c}, Lm ${Lm} ≤ ${Lp - c}.`,
