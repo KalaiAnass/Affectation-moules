@@ -96,6 +96,7 @@ function ruleMountability(press: Press, mold: Mold, lang: Lang): RuleResult {
   const Lc = press.tieBarWidth;
   const Hc = press.tieBarHeight;
   const Lp = press.platenWidth;
+  const Hp = press.platenHeight;
   const { widthLm: Lm, heightHm: Hm, thicknessEm: Em } = mold;
 
   const base = {
@@ -103,8 +104,8 @@ function ruleMountability(press: Press, mold: Mold, lang: Lang): RuleResult {
     label: 'Mountability',
     labelFr: 'Montabilité',
     press: fr
-      ? `entre-colonnes ${Lc}×${Hc} mm, plateau L ${Lp} mm`
-      : `tie-bars ${Lc}×${Hc} mm, platen W ${Lp} mm`,
+      ? `entre-colonnes ${Lc}×${Hc} mm, plateau ${Lp}×${Hp} mm`
+      : `tie-bars ${Lc}×${Hc} mm, platen ${Lp}×${Hp} mm`,
     mold: `L ${Lm} × H ${Hm} × E ${Em} mm`,
   } as const;
 
@@ -148,30 +149,37 @@ function ruleMountability(press: Press, mold: Mold, lang: Lang): RuleResult {
   }
 
   // Too wide but height fits: rotate 90° during insertion. The mold may overhang
-  // the platen by up to PLATEN_OVERHANG_MM; beyond that it cannot be mounted.
+  // the platen — in width AND height — by up to PLATEN_OVERHANG_MM; beyond that
+  // it cannot be mounted.
   if (!wFits && hFits) {
     const rotThick = Em <= Lc - c;
-    const platenFits = Lm <= Lp - c;
-    const platenOverhang = Lm <= Lp + PLATEN_OVERHANG_MM;
-    if (rotThick && platenFits) {
+    const widthFits = Lm <= Lp - c;
+    const heightFits = Hm <= Hp - c;
+    const widthOverhang = Lm <= Lp + PLATEN_OVERHANG_MM;
+    const heightOverhang = Hm <= Hp + PLATEN_OVERHANG_MM;
+
+    if (rotThick && widthFits && heightFits) {
       // 90° rotation is a normal SMED step, not an anomaly => PASS (green).
       return {
         ...base,
         status: 'PASS',
         details: fr
-          ? `Trop large pour une entrée standard (Lm ${Lm} > ${Lc - c}) mais passe en rotation : Em ${Em} ≤ ${Lc - c}, Lm ${Lm} ≤ ${Lp - c}.`
-          : `Too wide for standard entry (Lm ${Lm} > ${Lc - c}) but fits rotated: Em ${Em} ≤ ${Lc - c}, Lm ${Lm} ≤ ${Lp - c}.`,
+          ? `Trop large pour une entrée standard (Lm ${Lm} > ${Lc - c}) mais passe en rotation : Em ${Em} ≤ ${Lc - c}, Lm ${Lm} ≤ ${Lp - c}, Hm ${Hm} ≤ ${Hp - c}.`
+          : `Too wide for standard entry (Lm ${Lm} > ${Lc - c}) but fits rotated: Em ${Em} ≤ ${Lc - c}, Lm ${Lm} ≤ ${Lp - c}, Hm ${Hm} ≤ ${Hp - c}.`,
         instruction: fr ? "Rotation requise lors de l'insertion." : 'Rotation required during insertion.',
       };
     }
-    if (rotThick && platenOverhang) {
+    if (rotThick && widthOverhang && heightOverhang) {
       // Mountable rotated with a platen overhang up to the allowance => condition (amber).
+      const ov: string[] = [];
+      if (!widthFits) ov.push(fr ? `Lm ${Lm} > plateau L ${Lp - c}` : `Lm ${Lm} > platen W ${Lp - c}`);
+      if (!heightFits) ov.push(fr ? `Hm ${Hm} > plateau H ${Hp - c}` : `Hm ${Hm} > platen H ${Hp - c}`);
       return {
         ...base,
         status: 'ADAPTATION',
         details: fr
-          ? `Montable en rotation avec débord plateau : Lm ${Lm} > plateau ${Lp - c} mais débord ≤ ${PLATEN_OVERHANG_MM} mm (≤ ${Lp + PLATEN_OVERHANG_MM}).`
-          : `Mountable rotated with platen overhang: Lm ${Lm} > platen ${Lp - c} but within ${PLATEN_OVERHANG_MM} mm (≤ ${Lp + PLATEN_OVERHANG_MM}).`,
+          ? `Montable en rotation avec débord plateau ≤ ${PLATEN_OVERHANG_MM} mm (${ov.join(', ')}).`
+          : `Mountable rotated with platen overhang ≤ ${PLATEN_OVERHANG_MM} mm (${ov.join(', ')}).`,
         instruction: fr
           ? `Rotation requise, avec débord plateau ≤ ${PLATEN_OVERHANG_MM} mm.`
           : `Rotation required, with platen overhang ≤ ${PLATEN_OVERHANG_MM} mm.`,
@@ -179,11 +187,17 @@ function ruleMountability(press: Press, mold: Mold, lang: Lang): RuleResult {
     }
     const reasons: string[] = [];
     if (!rotThick) reasons.push(`Em ${Em} > ${Lc - c}`);
-    if (!platenOverhang)
+    if (!widthOverhang)
       reasons.push(
         fr
-          ? `Lm ${Lm} > plateau+${PLATEN_OVERHANG_MM} ${Lp + PLATEN_OVERHANG_MM}`
-          : `Lm ${Lm} > platen+${PLATEN_OVERHANG_MM} ${Lp + PLATEN_OVERHANG_MM}`,
+          ? `Lm ${Lm} > plateau L+${PLATEN_OVERHANG_MM} ${Lp + PLATEN_OVERHANG_MM}`
+          : `Lm ${Lm} > platen W+${PLATEN_OVERHANG_MM} ${Lp + PLATEN_OVERHANG_MM}`,
+      );
+    if (!heightOverhang)
+      reasons.push(
+        fr
+          ? `Hm ${Hm} > plateau H+${PLATEN_OVERHANG_MM} ${Hp + PLATEN_OVERHANG_MM}`
+          : `Hm ${Hm} > platen H+${PLATEN_OVERHANG_MM} ${Hp + PLATEN_OVERHANG_MM}`,
       );
     return {
       ...base,

@@ -83,13 +83,14 @@ export function ruleMountability(press: Press, mold: Mold): RuleResult {
   const Lc = press.tieBarWidth;
   const Hc = press.tieBarHeight;
   const Lp = press.platenWidth;
+  const Hp = press.platenHeight;
   const { widthLm: Lm, heightHm: Hm, thicknessEm: Em } = mold;
 
   const base = {
     rule: 'mountability',
     label: 'Mountability',
     labelFr: 'Montabilité',
-    press: `entre-colonnes ${Lc}×${Hc} mm, plateau L ${Lp} mm`,
+    press: `entre-colonnes ${Lc}×${Hc} mm, plateau ${Lp}×${Hp} mm`,
     mold: `L ${Lm} × H ${Hm} × E ${Em} mm`,
   } as const;
 
@@ -127,32 +128,40 @@ export function ruleMountability(press: Press, mold: Mold): RuleResult {
   }
 
   // Too wide but height fits: rotate 90° during insertion. The mold may overhang
-  // the platen by up to PLATEN_OVERHANG_MM; beyond that it cannot be mounted.
+  // the platen — in width AND height — by up to PLATEN_OVERHANG_MM; beyond that
+  // it cannot be mounted.
   if (!wFits && hFits) {
     const rotThick = Em <= Lc - c;
-    const platenFits = Lm <= Lp - c;
-    const platenOverhang = Lm <= Lp + PLATEN_OVERHANG_MM;
-    if (rotThick && platenFits) {
+    const widthFits = Lm <= Lp - c;
+    const heightFits = Hm <= Hp - c;
+    const widthOverhang = Lm <= Lp + PLATEN_OVERHANG_MM;
+    const heightOverhang = Hm <= Hp + PLATEN_OVERHANG_MM;
+
+    if (rotThick && widthFits && heightFits) {
       // 90° rotation is a normal SMED step, not an anomaly => PASS (green).
       return {
         ...base,
         status: 'PASS',
-        details: `Too wide for standard entry (Lm ${Lm} > ${Lc - c}) but fits rotated: Em ${Em} ≤ ${Lc - c}, Lm ${Lm} ≤ ${Lp - c}.`,
+        details: `Too wide for standard entry (Lm ${Lm} > ${Lc - c}) but fits rotated: Em ${Em} ≤ ${Lc - c}, Lm ${Lm} ≤ ${Lp - c}, Hm ${Hm} ≤ ${Hp - c}.`,
         instruction: 'Rotation required during insertion.',
       };
     }
-    if (rotThick && platenOverhang) {
+    if (rotThick && widthOverhang && heightOverhang) {
       // Mountable rotated with a platen overhang up to the allowance => condition.
+      const ov: string[] = [];
+      if (!widthFits) ov.push(`Lm ${Lm} > platen W ${Lp - c}`);
+      if (!heightFits) ov.push(`Hm ${Hm} > platen H ${Hp - c}`);
       return {
         ...base,
         status: 'ADAPTATION',
-        details: `Mountable rotated with platen overhang: Lm ${Lm} > platen ${Lp - c} but within ${PLATEN_OVERHANG_MM} mm overhang (≤ ${Lp + PLATEN_OVERHANG_MM}).`,
+        details: `Mountable rotated with platen overhang ≤ ${PLATEN_OVERHANG_MM} mm (${ov.join(', ')}).`,
         instruction: `Rotation required, with platen overhang ≤ ${PLATEN_OVERHANG_MM} mm.`,
       };
     }
     const reasons: string[] = [];
     if (!rotThick) reasons.push(`Em ${Em} > ${Lc - c}`);
-    if (!platenOverhang) reasons.push(`Lm ${Lm} > platen+${PLATEN_OVERHANG_MM} ${Lp + PLATEN_OVERHANG_MM}`);
+    if (!widthOverhang) reasons.push(`Lm ${Lm} > platen W+${PLATEN_OVERHANG_MM} ${Lp + PLATEN_OVERHANG_MM}`);
+    if (!heightOverhang) reasons.push(`Hm ${Hm} > platen H+${PLATEN_OVERHANG_MM} ${Hp + PLATEN_OVERHANG_MM}`);
     return {
       ...base,
       status: 'FAIL',

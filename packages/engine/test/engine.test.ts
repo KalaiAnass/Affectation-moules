@@ -199,6 +199,21 @@ describe('individual rules', () => {
     expect(result.decision).toBe('NOT_COMPATIBLE');
   });
 
+  it('Mountability — rotated mold overhanging the platen HEIGHT by ≤ 50 mm is a condition', () => {
+    // Short platen height (600 => Hp-5=595, Hp+50=650) so the height-overhang path is reachable.
+    const shortPlaten: Press = { ...bigPress, platenHeight: 600 };
+    const m: Mold = { ...tinyMold, widthLm: 2100, heightHm: 620, thicknessEm: 400 };
+    const mount = checkCompatibility(shortPlaten, m).rules.find((r) => r.rule === 'mountability')!;
+    expect(mount.status).toBe('ADAPTATION');
+    expect(mount.details).toMatch(/Hm/);
+  });
+
+  it('Mountability — rotated mold overhanging the platen HEIGHT by > 50 mm FAILs', () => {
+    const shortPlaten: Press = { ...bigPress, platenHeight: 600 };
+    const m: Mold = { ...tinyMold, widthLm: 2100, heightHm: 700, thicknessEm: 400 };
+    expect(checkCompatibility(shortPlaten, m).rules.find((r) => r.rule === 'mountability')!.status).toBe('FAIL');
+  });
+
   it('Rule 4 — a mold too big in both directions FAILs mountability', () => {
     const huge: Mold = { ...tinyMold, widthLm: 3000, heightHm: 3000 };
     const result = checkCompatibility(bigPress, huge);
