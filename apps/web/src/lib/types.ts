@@ -82,6 +82,7 @@ export interface MatrixEntry {
   decision: Decision;
   requiresAdaptation: boolean;
   blockingRuleLabels: string[];
+  conditionRuleLabels: string[];
 }
 
 export interface ReverseEntry {
@@ -90,6 +91,7 @@ export interface ReverseEntry {
   decision: Decision;
   requiresAdaptation: boolean;
   blockingRuleLabels: string[];
+  conditionRuleLabels: string[];
 }
 
 export interface AuditItem {

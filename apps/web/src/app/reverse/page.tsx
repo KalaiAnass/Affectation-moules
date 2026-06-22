@@ -89,6 +89,9 @@ export default function ReversePage() {
                     {e.designation || '—'}
                     {e.decision === 'NOT_COMPATIBLE' && ` · ${e.blockingRuleLabels.join(', ')}`}
                   </div>
+                  {e.decision === 'COMPATIBLE' && e.requiresAdaptation && (
+                    <div className="truncate text-xs text-warn">{e.conditionRuleLabels.join(', ')}</div>
+                  )}
                 </div>
                 <div className="flex items-center gap-3">
                   <span className="hidden text-xs text-brand opacity-0 transition group-hover:opacity-100 sm:inline">

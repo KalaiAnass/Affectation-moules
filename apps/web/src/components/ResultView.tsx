@@ -11,7 +11,9 @@ export function ResultView({ result }: { result: CompatibilityResult }) {
   const adaptation = result.requiresAdaptation;
   const heroBg = !ok ? 'bg-bad' : adaptation ? 'bg-warn' : 'bg-ok';
 
-  const blockingLabels = result.blockingRules.map((r) => (lang === 'fr' ? r.labelFr : r.label));
+  const lbl = (r: RuleResult) => (lang === 'fr' ? r.labelFr : r.label);
+  const blockingLabels = result.blockingRules.map(lbl);
+  const conditionLabels = result.rules.filter((r) => r.status === 'ADAPTATION').map(lbl);
 
   return (
     <div className="space-y-5">
@@ -25,13 +27,13 @@ export function ResultView({ result }: { result: CompatibilityResult }) {
           {t.result.press} {result.pressId} · {t.result.mold} {result.moldId}
         </div>
         <div className="mt-1 text-3xl font-semibold tracking-tight sm:text-4xl">
-          {ok ? t.result.compatible : t.result.notCompatible}
+          {!ok ? t.result.notCompatible : adaptation ? t.result.compatibleConditional : t.result.compatible}
         </div>
         <div className="mt-1 text-sm opacity-90">
           {!ok
             ? `${t.result.blockedBy(result.blockingRules.length)}${blockingLabels.join(', ')}.`
             : adaptation
-              ? t.result.adaptation
+              ? `${t.result.conditionsIntro}${conditionLabels.join(', ')}.`
               : t.result.allPassed}
         </div>
       </motion.div>

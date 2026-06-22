@@ -46,7 +46,8 @@ function capacity(
     rule,
     label,
     labelFr,
-    status: ok ? 'PASS' : 'FAIL',
+    // Equipment shortfall is a condition (amber), not a hard block.
+    status: ok ? 'PASS' : 'ADAPTATION',
     press: `${pressVal}${u}`,
     mold: `${moldVal}${u}`,
     details: ok
@@ -54,8 +55,8 @@ function capacity(
         ? `Presse ${pressVal}${u} ≥ moule ${moldVal}${u}.`
         : `Press ${pressVal}${u} ≥ mold ${moldVal}${u}.`
       : lang === 'fr'
-        ? `Insuffisant : presse ${pressVal}${u} < moule ${moldVal}${u}.`
-        : `Insufficient: press ${pressVal}${u} < mold ${moldVal}${u}.`,
+        ? `Sous condition : capacité presse inférieure au besoin (presse ${pressVal}${u} < moule ${moldVal}${u}).`
+        : `Condition — press capacity below mold need (press ${pressVal}${u} < mold ${moldVal}${u}).`,
   };
 }
 
@@ -245,7 +246,7 @@ function ruleHydraulicCores(press: Press, mold: Mold, lang: Lang): RuleResult {
     rule: 'hydraulicCores',
     label: 'Hydraulic Cores',
     labelFr: 'Noyaux hydrauliques',
-    status: ok ? 'PASS' : 'FAIL',
+    status: ok ? 'PASS' : 'ADAPTATION',
     press: `PF ${press.hydraulicPF} / PM ${press.hydraulicPM}`,
     mold: `PF ${mold.hydraulicPF} / PM ${mold.hydraulicPM}`,
     details: ok
@@ -253,8 +254,8 @@ function ruleHydraulicCores(press: Press, mold: Mold, lang: Lang): RuleResult {
         ? `La presse couvre les deux circuits (PF ${press.hydraulicPF}≥${mold.hydraulicPF}, PM ${press.hydraulicPM}≥${mold.hydraulicPM}).`
         : `Press covers both circuits (PF ${press.hydraulicPF}≥${mold.hydraulicPF}, PM ${press.hydraulicPM}≥${mold.hydraulicPM}).`
       : fr
-        ? `Insuffisant : ${reasons.join(' ; ')}.`
-        : `Insufficient: ${reasons.join('; ')}.`,
+        ? `Sous condition : ${reasons.join(' ; ')}.`
+        : `Condition — ${reasons.join('; ')}.`,
   };
 }
 
@@ -273,7 +274,7 @@ function ruleThermoregulation(press: Press, mold: Mold, lang: Lang): RuleResult 
     rule: 'thermoregulation',
     label: 'Thermoregulation',
     labelFr: 'Thermorégulation',
-    status: ok ? 'PASS' : 'FAIL',
+    status: ok ? 'PASS' : 'ADAPTATION',
     press: `PF ${press.thermoPF} / PM ${press.thermoPM} / ${grid} ${press.thermoGrid}`,
     mold: `PF ${mold.thermoPF} / PM ${mold.thermoPM} / ${grid} ${mold.thermoGrid}`,
     details: ok
@@ -281,8 +282,8 @@ function ruleThermoregulation(press: Press, mold: Mold, lang: Lang): RuleResult 
         ? 'La presse couvre tous les branchements thermo.'
         : 'Press covers all thermo connections.'
       : fr
-        ? `Insuffisant : ${reasons.join(' ; ')}.`
-        : `Insufficient: ${reasons.join('; ')}.`,
+        ? `Sous condition : ${reasons.join(' ; ')}.`
+        : `Condition — ${reasons.join('; ')}.`,
   };
 }
 
@@ -321,6 +322,9 @@ export function checkCompatibility(press: Press, mold: Mold, lang: Lang = 'fr'):
 
 const ruleLabel = (r: RuleResult, lang: Lang) => (lang === 'fr' ? r.labelFr : r.label);
 
+const conditionLabels = (rules: ReturnType<typeof checkCompatibility>['rules'], lang: Lang): string[] =>
+  rules.filter((x) => x.status === 'ADAPTATION').map((x) => ruleLabel(x, lang));
+
 export function compatibilityMatrix(mold: Mold, presses: Press[], lang: Lang = 'fr'): MatrixEntry[] {
   return presses.map((press) => {
     const r = checkCompatibility(press, mold, lang);
@@ -329,6 +333,7 @@ export function compatibilityMatrix(mold: Mold, presses: Press[], lang: Lang = '
       decision: r.decision,
       requiresAdaptation: r.requiresAdaptation,
       blockingRuleLabels: r.blockingRules.map((x) => ruleLabel(x, lang)),
+      conditionRuleLabels: conditionLabels(r.rules, lang),
     };
   });
 }
@@ -342,6 +347,7 @@ export function reverseSearch(press: Press, molds: Mold[], lang: Lang = 'fr'): R
       decision: r.decision,
       requiresAdaptation: r.requiresAdaptation,
       blockingRuleLabels: r.blockingRules.map((x) => ruleLabel(x, lang)),
+      conditionRuleLabels: conditionLabels(r.rules, lang),
     };
   });
 }

@@ -31,8 +31,14 @@ export interface MatrixEntry {
   pressId: string;
   decision: CompatibilityResult['decision'];
   requiresAdaptation: boolean;
+  /** Labels of the rules that hard-block (status FAIL). */
   blockingRuleLabels: string[];
+  /** Labels of the rules that are satisfiable under condition (status ADAPTATION). */
+  conditionRuleLabels: string[];
 }
+
+const conditionLabels = (rules: RuleResult[]): string[] =>
+  rules.filter((r) => r.status === 'ADAPTATION').map((r) => r.label);
 
 /** Compatibility matrix: test one mold against all supplied presses. */
 export function compatibilityMatrix(mold: Mold, presses: Press[]): MatrixEntry[] {
@@ -43,6 +49,7 @@ export function compatibilityMatrix(mold: Mold, presses: Press[]): MatrixEntry[]
       decision: result.decision,
       requiresAdaptation: result.requiresAdaptation,
       blockingRuleLabels: result.blockingRules.map((r) => r.label),
+      conditionRuleLabels: conditionLabels(result.rules),
     };
   });
 }
@@ -54,6 +61,7 @@ export interface ReverseEntry {
   decision: CompatibilityResult['decision'];
   requiresAdaptation: boolean;
   blockingRuleLabels: string[];
+  conditionRuleLabels: string[];
 }
 
 export function reverseSearch(press: Press, molds: Mold[]): ReverseEntry[] {
@@ -65,6 +73,7 @@ export function reverseSearch(press: Press, molds: Mold[]): ReverseEntry[] {
       decision: result.decision,
       requiresAdaptation: result.requiresAdaptation,
       blockingRuleLabels: result.blockingRules.map((r) => r.label),
+      conditionRuleLabels: conditionLabels(result.rules),
     };
   });
 }

@@ -12,7 +12,12 @@ import type { Mold, Press, RuleResult } from './types.js';
 /** Safety clearance applied to every clamping-area dimension (mm). */
 export const CLEARANCE_MM = 5;
 
-/** Lower-is-OK numeric comparison helper: press capacity must cover mold need. */
+/**
+ * Lower-is-OK numeric comparison helper for an *equipment* condition: the press
+ * capacity should cover the mold need. A shortfall is not a hard block — it is a
+ * condition to satisfy (status ADAPTATION, shown amber), so the overall result
+ * stays "compatible under condition" rather than "not compatible".
+ */
 function capacity(
   rule: string,
   label: string,
@@ -27,12 +32,12 @@ function capacity(
     rule,
     label,
     labelFr,
-    status: ok ? 'PASS' : 'FAIL',
+    status: ok ? 'PASS' : 'ADAPTATION',
     press: `${pressVal}${u}`,
     mold: `${moldVal}${u}`,
     details: ok
       ? `Press ${pressVal}${u} ≥ mold ${moldVal}${u}.`
-      : `Insufficient: press ${pressVal}${u} < mold ${moldVal}${u}.`,
+      : `Condition — press capacity below mold need (press ${pressVal}${u} < mold ${moldVal}${u}).`,
   };
 }
 
@@ -203,12 +208,12 @@ export function ruleHydraulicCores(press: Press, mold: Mold): RuleResult {
     rule: 'hydraulicCores',
     label: 'Hydraulic Cores',
     labelFr: 'Noyaux hydrauliques',
-    status: ok ? 'PASS' : 'FAIL',
+    status: ok ? 'PASS' : 'ADAPTATION',
     press: `PF ${press.hydraulicPF} / PM ${press.hydraulicPM}`,
     mold: `PF ${mold.hydraulicPF} / PM ${mold.hydraulicPM}`,
     details: ok
       ? `Press covers both circuits (PF ${press.hydraulicPF}≥${mold.hydraulicPF}, PM ${press.hydraulicPM}≥${mold.hydraulicPM}).`
-      : `Insufficient: ${reasons.join('; ')}.`,
+      : `Condition — press capacity below mold need: ${reasons.join('; ')}.`,
   };
 }
 
@@ -226,10 +231,12 @@ export function ruleThermoregulation(press: Press, mold: Mold): RuleResult {
     rule: 'thermoregulation',
     label: 'Thermoregulation',
     labelFr: 'Thermorégulation',
-    status: ok ? 'PASS' : 'FAIL',
+    status: ok ? 'PASS' : 'ADAPTATION',
     press: `PF ${press.thermoPF} / PM ${press.thermoPM} / grille ${press.thermoGrid}`,
     mold: `PF ${mold.thermoPF} / PM ${mold.thermoPM} / grille ${mold.thermoGrid}`,
-    details: ok ? `Press covers all thermo connections.` : `Insufficient: ${reasons.join('; ')}.`,
+    details: ok
+      ? `Press covers all thermo connections.`
+      : `Condition — press capacity below mold need: ${reasons.join('; ')}.`,
   };
 }
 

@@ -19,9 +19,11 @@ export interface Strings {
   result: {
     compatible: string;
     notCompatible: string;
+    compatibleConditional: string;
     press: string;
     mold: string;
     blockedBy: (n: number) => string;
+    conditionsIntro: string;
     adaptation: string;
     allPassed: string;
   };
@@ -76,19 +78,21 @@ const STRINGS: Record<Lang, Strings> = {
     result: {
       compatible: 'COMPATIBLE',
       notCompatible: 'NON COMPATIBLE',
+      compatibleConditional: 'COMPATIBLE SOUS CONDITION',
       press: 'Presse',
       mold: 'Moule',
       blockedBy: (n: number) => `Bloqué par ${n} règle${n > 1 ? 's' : ''} : `,
+      conditionsIntro: 'Compatible sous réserve de respecter : ',
       adaptation: 'Montable avec une adaptation — voir les étapes en surbrillance ci-dessous.',
       allPassed: 'Toutes les vérifications sont passées. Prêt à monter.',
     },
     chip: {
       pass: 'Réussi',
       fail: 'Échec',
-      adaptation: 'Adaptation',
+      adaptation: 'Sous condition',
       compatible: 'Compatible',
       notCompatible: 'Non compatible',
-      compatibleAdaptation: 'Compatible · adaptation',
+      compatibleAdaptation: 'Compatible sous condition',
     },
     matrix: {
       title: 'Matrice de compatibilité',
@@ -138,19 +142,21 @@ const STRINGS: Record<Lang, Strings> = {
     result: {
       compatible: 'COMPATIBLE',
       notCompatible: 'NOT COMPATIBLE',
+      compatibleConditional: 'CONDITIONALLY COMPATIBLE',
       press: 'Press',
       mold: 'Mold',
       blockedBy: (n: number) => `Blocked by ${n} rule${n > 1 ? 's' : ''}: `,
+      conditionsIntro: 'Compatible subject to: ',
       adaptation: 'Mountable with an adaptation — see the highlighted steps below.',
       allPassed: 'All checks passed. Ready to mount.',
     },
     chip: {
       pass: 'Pass',
       fail: 'Fail',
-      adaptation: 'Adaptation',
+      adaptation: 'Conditional',
       compatible: 'Compatible',
       notCompatible: 'Not compatible',
-      compatibleAdaptation: 'Compatible · adaptation',
+      compatibleAdaptation: 'Conditionally compatible',
     },
     matrix: {
       title: 'Compatibility matrix',

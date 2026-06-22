@@ -83,6 +83,8 @@ export default function MatrixPage() {
                   <div className="font-medium">{e.pressId}</div>
                   {e.decision === 'NOT_COMPATIBLE' ? (
                     <div className="truncate text-xs text-ink-muted">{e.blockingRuleLabels.join(', ')}</div>
+                  ) : e.requiresAdaptation ? (
+                    <div className="truncate text-xs text-warn">{e.conditionRuleLabels.join(', ')}</div>
                   ) : (
                     <div className="text-xs text-brand opacity-0 transition group-hover:opacity-100">
                       {t.common.details} →

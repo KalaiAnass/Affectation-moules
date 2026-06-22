@@ -126,18 +126,19 @@ describe('dataset integrity', () => {
   });
 });
 
-describe('canonical workbook example: 2700T2 × 978 = NOK on heating zones', () => {
+describe('canonical workbook example: 2700T2 × 978 — equipment shortfalls are conditions', () => {
   const result = checkCompatibility(getPress('2700T2')!, getMold('978')!);
 
-  it('is NOT_COMPATIBLE', () => {
-    expect(result.decision).toBe('NOT_COMPATIBLE');
+  it('is COMPATIBLE under condition (no hard physical block)', () => {
+    expect(result.decision).toBe('COMPATIBLE');
+    expect(result.requiresAdaptation).toBe(true);
   });
-  it('blocks on heating zones with the workbook values (press 72 < mold 85)', () => {
+  it('flags heating zones as a condition (amber) with the workbook values (press 72 < mold 85)', () => {
     const zones = result.rules.find((r) => r.rule === 'heatingZones')!;
-    expect(zones.status).toBe('FAIL');
+    expect(zones.status).toBe('ADAPTATION');
     expect(zones.press).toContain('72');
     expect(zones.mold).toContain('85');
-    expect(result.blockingRules.map((r) => r.rule)).toContain('heatingZones');
+    expect(result.blockingRules).toHaveLength(0);
   });
   it('passes the oversize entry as a rotation (green, not a block) with its instruction', () => {
     const mount = result.rules.find((r) => r.rule === 'mountability')!;
@@ -221,14 +222,24 @@ describe('individual rules', () => {
     expect(mag.status).toBe('ADAPTATION');
   });
 
-  it('Rule 9 — sequential outputs below mold nozzles fails', () => {
+  it('Rule 9 — sequential outputs below mold nozzles is a condition (amber), not a block', () => {
     const result = checkCompatibility({ ...bigPress, sequentialOutputs: 1 }, { ...tinyMold, sequentialNozzles: 5 });
-    expect(result.rules.find((r) => r.rule === 'sequential')!.status).toBe('FAIL');
+    expect(result.rules.find((r) => r.rule === 'sequential')!.status).toBe('ADAPTATION');
+    expect(result.decision).toBe('COMPATIBLE');
   });
 
-  it('Rule 10 — insufficient clamping force fails', () => {
+  it('Rule 10 — insufficient clamping force is a condition (amber), not a block', () => {
     const result = checkCompatibility({ ...bigPress, clampingForce: 100 }, tinyMold);
-    expect(result.rules.find((r) => r.rule === 'clampingForce')!.status).toBe('FAIL');
+    expect(result.rules.find((r) => r.rule === 'clampingForce')!.status).toBe('ADAPTATION');
+    expect(result.decision).toBe('COMPATIBLE');
+  });
+
+  it('Equipment shortfalls alone => COMPATIBLE; only physical limits => NOT_COMPATIBLE', () => {
+    const lowZones = checkCompatibility({ ...bigPress, heatingZones: 1 }, tinyMold);
+    expect(lowZones.decision).toBe('COMPATIBLE');
+    expect(lowZones.requiresAdaptation).toBe(true);
+    const tooThick = checkCompatibility(bigPress, { ...tinyMold, thicknessEm: 50 });
+    expect(tooThick.decision).toBe('NOT_COMPATIBLE'); // thickness is a hard physical limit
   });
 });
 
