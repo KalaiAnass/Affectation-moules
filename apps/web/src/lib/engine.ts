@@ -29,6 +29,8 @@ export const getPress = (id: string): Press | undefined => pressIndex.get(id);
 export const getMold = (id: string): Mold | undefined => moldIndex.get(id);
 
 const CLEARANCE_MM = 5;
+/** Max platen overhang (mm) tolerated for a rotated mold (mountable as a condition). */
+const PLATEN_OVERHANG_MM = 50;
 
 function capacity(
   rule: string,
@@ -145,11 +147,13 @@ function ruleMountability(press: Press, mold: Mold, lang: Lang): RuleResult {
     };
   }
 
-  // Too wide but height fits: rotate 90° during insertion.
+  // Too wide but height fits: rotate 90° during insertion. The mold may overhang
+  // the platen by up to PLATEN_OVERHANG_MM; beyond that it cannot be mounted.
   if (!wFits && hFits) {
     const rotThick = Em <= Lc - c;
-    const rotPlaten = Lm <= Lp - c;
-    if (rotThick && rotPlaten) {
+    const platenFits = Lm <= Lp - c;
+    const platenOverhang = Lm <= Lp + PLATEN_OVERHANG_MM;
+    if (rotThick && platenFits) {
       // 90° rotation is a normal SMED step, not an anomaly => PASS (green).
       return {
         ...base,
@@ -160,9 +164,27 @@ function ruleMountability(press: Press, mold: Mold, lang: Lang): RuleResult {
         instruction: fr ? "Rotation requise lors de l'insertion." : 'Rotation required during insertion.',
       };
     }
+    if (rotThick && platenOverhang) {
+      // Mountable rotated with a platen overhang up to the allowance => condition (amber).
+      return {
+        ...base,
+        status: 'ADAPTATION',
+        details: fr
+          ? `Montable en rotation avec débord plateau : Lm ${Lm} > plateau ${Lp - c} mais débord ≤ ${PLATEN_OVERHANG_MM} mm (≤ ${Lp + PLATEN_OVERHANG_MM}).`
+          : `Mountable rotated with platen overhang: Lm ${Lm} > platen ${Lp - c} but within ${PLATEN_OVERHANG_MM} mm (≤ ${Lp + PLATEN_OVERHANG_MM}).`,
+        instruction: fr
+          ? `Rotation requise, avec débord plateau ≤ ${PLATEN_OVERHANG_MM} mm.`
+          : `Rotation required, with platen overhang ≤ ${PLATEN_OVERHANG_MM} mm.`,
+      };
+    }
     const reasons: string[] = [];
     if (!rotThick) reasons.push(`Em ${Em} > ${Lc - c}`);
-    if (!rotPlaten) reasons.push(fr ? `Lm ${Lm} > plateau ${Lp - c}` : `Lm ${Lm} > platen ${Lp - c}`);
+    if (!platenOverhang)
+      reasons.push(
+        fr
+          ? `Lm ${Lm} > plateau+${PLATEN_OVERHANG_MM} ${Lp + PLATEN_OVERHANG_MM}`
+          : `Lm ${Lm} > platen+${PLATEN_OVERHANG_MM} ${Lp + PLATEN_OVERHANG_MM}`,
+      );
     return {
       ...base,
       status: 'FAIL',

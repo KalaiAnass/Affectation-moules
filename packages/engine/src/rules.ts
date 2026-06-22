@@ -13,6 +13,12 @@ import type { Mold, Press, RuleResult } from './types.js';
 export const CLEARANCE_MM = 5;
 
 /**
+ * Max width by which a rotated mold may overhang the press platen and still be
+ * mountable (as a condition). Beyond this the mold cannot be mounted.
+ */
+export const PLATEN_OVERHANG_MM = 50;
+
+/**
  * Lower-is-OK numeric comparison helper for an *equipment* condition: the press
  * capacity should cover the mold need. A shortfall is not a hard block — it is a
  * condition to satisfy (status ADAPTATION, shown amber), so the overall result
@@ -120,11 +126,13 @@ export function ruleMountability(press: Press, mold: Mold): RuleResult {
     };
   }
 
-  // Too wide but height fits: rotate 90° during insertion.
+  // Too wide but height fits: rotate 90° during insertion. The mold may overhang
+  // the platen by up to PLATEN_OVERHANG_MM; beyond that it cannot be mounted.
   if (!wFits && hFits) {
     const rotThick = Em <= Lc - c;
-    const rotPlaten = Lm <= Lp - c;
-    if (rotThick && rotPlaten) {
+    const platenFits = Lm <= Lp - c;
+    const platenOverhang = Lm <= Lp + PLATEN_OVERHANG_MM;
+    if (rotThick && platenFits) {
       // 90° rotation is a normal SMED step, not an anomaly => PASS (green).
       return {
         ...base,
@@ -133,9 +141,18 @@ export function ruleMountability(press: Press, mold: Mold): RuleResult {
         instruction: 'Rotation required during insertion.',
       };
     }
+    if (rotThick && platenOverhang) {
+      // Mountable rotated with a platen overhang up to the allowance => condition.
+      return {
+        ...base,
+        status: 'ADAPTATION',
+        details: `Mountable rotated with platen overhang: Lm ${Lm} > platen ${Lp - c} but within ${PLATEN_OVERHANG_MM} mm overhang (≤ ${Lp + PLATEN_OVERHANG_MM}).`,
+        instruction: `Rotation required, with platen overhang ≤ ${PLATEN_OVERHANG_MM} mm.`,
+      };
+    }
     const reasons: string[] = [];
     if (!rotThick) reasons.push(`Em ${Em} > ${Lc - c}`);
-    if (!rotPlaten) reasons.push(`Lm ${Lm} > platen ${Lp - c}`);
+    if (!platenOverhang) reasons.push(`Lm ${Lm} > platen+${PLATEN_OVERHANG_MM} ${Lp + PLATEN_OVERHANG_MM}`);
     return {
       ...base,
       status: 'FAIL',

@@ -182,6 +182,23 @@ describe('individual rules', () => {
     expect(mount.instruction).toMatch(/rotation/i);
   });
 
+  it('Mountability — rotated mold overhanging the platen by ≤ 50 mm is a condition (amber)', () => {
+    // bigPress: Lp=2500 (platen-5 => 2495; +50 => 2550). Lm 2520 overhangs by ≤ 50.
+    const overhang: Mold = { ...tinyMold, widthLm: 2520, heightHm: 500, thicknessEm: 400 };
+    const result = checkCompatibility(bigPress, overhang);
+    const mount = result.rules.find((r) => r.rule === 'mountability')!;
+    expect(mount.status).toBe('ADAPTATION');
+    expect(mount.instruction).toMatch(/overhang/i);
+    expect(result.decision).toBe('COMPATIBLE');
+  });
+
+  it('Mountability — rotated mold overhanging the platen by > 50 mm FAILs', () => {
+    const tooFar: Mold = { ...tinyMold, widthLm: 2600, heightHm: 500, thicknessEm: 400 };
+    const result = checkCompatibility(bigPress, tooFar);
+    expect(result.rules.find((r) => r.rule === 'mountability')!.status).toBe('FAIL');
+    expect(result.decision).toBe('NOT_COMPATIBLE');
+  });
+
   it('Rule 4 — a mold too big in both directions FAILs mountability', () => {
     const huge: Mold = { ...tinyMold, widthLm: 3000, heightHm: 3000 };
     const result = checkCompatibility(bigPress, huge);
